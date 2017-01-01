@@ -320,3 +320,27 @@ void add_sp_reg_t3(ubit16_t opcode_h, ubit16_t opcode_l, machine_t& machine) {
         }
     }
 }
+
+void adr_t1(ubit16_t opcode, machine_t& machine) {
+    GET_R(mask_bits<ubit4_t, ubit16_t, 8, 3>(opcode), machine.arm) = ALIGN(GET_R(15, machine.arm), 4) + (mask_bits<ubit32_t, ubit16_t, 0, 8>(opcode) << 2);
+}
+
+void adr_t2(ubit16_t opcode_h, ubit16_t opcode_l, machine_t& machine) {
+    ubit4_t dx = mask_bits<ubit4_t, ubit16_t, 8, 4>(opcode);
+    if(BAD_R(dx)) { /*unpredicttable*/ return ; }
+    GET_R(dx, machine.arm) = ALIGN(GET_R(15, machine.arm), 4) - (
+        (mask_bits<ubit32_t, ubit16_t, 10, 1>(opcode_h) << 11) |
+        (mask_bits<ubit32_t, ubit16_t, 12, 3>(opcode_l) << 8 ) |
+        (mask_bits<ubit32_t, ubit16_t, 0 , 8>(opcode_l))
+    );
+}
+
+void adr_t3(ubit16_t opcode_h, ubit16_t opcode_l, machine_t& machine) {
+    ubit4_t dx = mask_bits<ubit4_t, ubit16_t, 8, 4>(opcode);
+    if(BAD_R(dx)) { /*unpredicttable*/ return ; }
+    GET_R(dx, machine.arm) = ALIGN(GET_R(15, machine.arm), 4) + (
+        (mask_bits<ubit32_t, ubit16_t, 10, 1>(opcode_h) << 11) |
+        (mask_bits<ubit32_t, ubit16_t, 12, 3>(opcode_l) << 8 ) |
+        (mask_bits<ubit32_t, ubit16_t, 0 , 8>(opcode_l))
+    );
+}

@@ -85,4 +85,6 @@ template<typename T, ubit8_t n> triad<T, ubit1_t, ubit1_t> add_with_carry(T x, T
 }
 
 template<typename TO, typename TI> TO zero_extend(const TI in_param) { return (TO)in_param; }
+
+#define ALIGN(x, y) ((y) * ((x) / (y)))
 #endif
