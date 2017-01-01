@@ -8,4 +8,8 @@ ubit32_t thumb_expand_imm(ubit12_t imm12, bool apsr_cf);
 void adc_imm(ubit16_t opcode_h, ubit16_t opcode_l, machine_t& machine);
 void adc_reg_t1(ubit16_t opcode, machine_t& machine);
 void adc_reg_t2(ubit16_t opcode_h, ubit16_t opcode_l, machine_t& machine);
+void add_imm_t1(ubit16_t opcode, machine_t& machine);
+void add_imm_t2(ubit16_t opcode, machine_t& machine);
+void add_imm_t3(ubit16_t opcode_h, ubit16_t opcode_l, machine_t& machine);
+void add_imm_t4(ubit16_t opcode_h, ubit16_t opcode_l, machine_t& machine);
 #endif

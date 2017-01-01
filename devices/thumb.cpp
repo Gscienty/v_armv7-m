@@ -30,7 +30,7 @@ void adc_imm(ubit16_t opcode_h , ubit16_t opcode_l, machine_t& machine) {
                         mask_bits<ubit12_t, ubit16_t, 12, 3>(opcode_l) << 8  |
                         mask_bits<ubit12_t, ubit16_t, 0 , 8>(opcode_l),
                         false
-                    ), 
+        ), 
         G_CF(machine.arm) ? 1 : 0
     );
 
@@ -78,4 +78,70 @@ void adc_reg_t2(ubit16_t opcode_h, ubit16_t opcode_l, machine_t& machine) {
         result.item2 == 1 ? S_CF(machine.arm) : C_CF(machine.arm);
         result.item3 == 1 ? S_VF(machine.arm) : C_VF(machine.arm);
     }
+}
+
+void add_imm_t1(ubit16_t opcode, machine_t& machine) {
+    ubit4_t dx = mask_bits<ubit4_t, ubit16_t, 0, 3>(opcode);
+    ubit4_t nx = mask_bits<ubit4_t, ubit16_t, 3, 3>(opcode);
+    ubit32_t imm32 = mask_bits<ubit32_t, ubit16_t, 6, 3>(opcode);
+
+    triad<ubit32_t, ubit1_t, ubit1_t> result = add_with_carry<ubit32_t, 32>(GET_R(nx, machine.arm), imm32, 0);
+    GET_R(dx, machine.arm) = result.item1;
+    if(in_it_block(machine)) {
+        mask_bit<ubit1_t, ubit32_t, 31>(result.item1) == 1 ? S_NF(machine.arm) : C_NF(machine.arm);
+        result.item1 == 0 ? S_ZF(machine.arm) : C_ZF(machine.arm);
+        result.item2 == 1 ? S_CF(machine.arm) : C_CF(machine.arm);
+        result.item3 == 1 ? S_VF(machine.arm) : C_VF(machine.arm);
+    }
+}
+
+void add_imm_t2(ubit16_t opcode, machine_t& machine) {
+    ubit32_t& r = GET_R(mask_bits<ubit4_t, ubit16_t, 8, 3>(opcode), machine.arm);
+    ubit32_t imm32 = mask_bits<ubit32_t, ubit16_t, 0, 8>(opcode);
+
+    triad<ubit32_t, ubit1_t, ubit1_t> result = add_with_carry<ubit32_t, 32>(r, imm32, 0);
+    r = result.item1;
+    if(in_it_block(machine)) {
+        mask_bit<ubit1_t, ubit32_t, 31>(result.item1) == 1 ? S_NF(machine.arm) : C_NF(machine.arm);
+        result.item1 == 0 ? S_ZF(machine.arm) : C_ZF(machine.arm);
+        result.item2 == 1 ? S_CF(machine.arm) : C_CF(machine.arm);
+        result.item3 == 1 ? S_VF(machine.arm) : C_VF(machine.arm);
+    }
+}
+
+void add_imm_t3(ubit16_t opcode_h, ubit16_t opcode_l, machine_t& machine) {
+    ubit4_t dx = mask_bits<ubit4_t, ubit16_t, 8, 4>(opcode_l);
+    ubit4_t nx = mask_bits<ubit4_t, ubit16_t, 0, 4>(opcode_h);
+    ubit1_t s  = mask_bit <ubit1_t, ubit16_t, 4>(opcode_h);
+    ubit32_t imm32 = thumb_expand_imm(
+        mask_bits<ubit12_t, ubit16_t, 10, 1>(opcode_h) << 11 |
+        mask_bits<ubit12_t, ubit16_t, 12, 3>(opcode_l) << 8  |
+        mask_bits<ubit12_t, ubit16_t, 0,  8>(opcode_l),
+        false
+    );
+    if (dx == binary<1111>::val && s == 1) { /*CMN (imm)*/ }
+    if (nx == binary<1101>::val) { /*add (sp plus imm)*/ }
+    if (BAD_R(dx, machine.arm) || n == 15) { /*unpredicttable*/ return; }
+
+    triad<ubit32_t, ubit1_t, ubit1_t> result = add_with_carry<ubit32_t, 32>(GET_R(nx, machine.arm), imm32, 0);
+
+    GET_R(dx, machine.arm) = result.item1;
+    if(in_it_block(machine)) {
+        mask_bit<ubit1_t, ubit32_t, 31>(result.item1) == 1 ? S_NF(machine.arm) : C_NF(machine.arm);
+        result.item1 == 0 ? S_ZF(machine.arm) : C_ZF(machine.arm);
+        result.item2 == 1 ? S_CF(machine.arm) : C_CF(machine.arm);
+        result.item3 == 1 ? S_VF(machine.arm) : C_VF(machine.arm);
+    }
+}
+
+void add_imm_t4(ubit16_t opcode_h, ubit16_t opcode_l, machine_t& machine) {
+    ubit4_t dx = mask_bits<ubit4_t, ubit16_t, 8, 4>(opcode_l);
+    ubit4_t nx = mask_bits<ubit4_t, ubit16_t, 0, 4>(opcode_h);
+    ubit32_t imm32 = mask_bits<ubit32_t, ubit16_t, 10, 10>(opcode_h) << 11 |
+        mask_bits<ubit32_t, ubit16_t, 12, 3>(opcode_l) << 8 |
+        mask_bits<ubit32_t, ubit16_t, 0,  8>(opcode_l);
+    
+    if(BAD_R(dx, machine.arm)) { /*unpredicttable*/ return ; }
+    
+    GET_R(dx, machine.arm) = add_with_carry<ubit32_t, 32>(GET_R(nx, machine.arm), imm32, 0).item1;
 }
